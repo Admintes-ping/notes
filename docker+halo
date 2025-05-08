@@ -1,0 +1,42 @@
+//删除docker旧版本，CentOS 7为例
+
+
+[root@iZj6cbqclrwugy0a8ke5qbZ halo]# sudo yum remove docker \
+>                 docker-client \
+>                 docker-client-latest \
+>                 docker-common \
+>                 docker-latest \
+>                 docker-latest-logrotate \
+>                 docker-logrotate \
+>                 docker-engine
+Loaded plugins: fastestmirror
+No Match for argument: docker
+No Match for argument: docker-client
+No Match for argument: docker-client-latest
+No Match for argument: docker-common
+No Match for argument: docker-latest
+No Match for argument: docker-latest-logrotate
+No Match for argument: docker-logrotate
+No Match for argument: docker-engine
+No Packages marked for removal
+
+
+//安装必要的依赖包
+sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+
+
+//添加Docker官方仓库
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+
+//安装Docker Engine
+sudo yum install -y docker-ce docker-ce-cli containerd.io
+
+//启动并设置开机自启Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+
+//验证Docker是否安装成功
+sudo docker run hello-world
+
