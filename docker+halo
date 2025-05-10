@@ -40,3 +40,34 @@ sudo systemctl enable docker
 //验证Docker是否安装成功
 sudo docker run hello-world
 
+
+
+
+#升级到 Halo 2.x
+//可以拉取最新镜像
+docker pull halohub/halo:latest
+
+//备份当前数据
+docker cp halo:/root/.halo /tmp/halo1_backup  # 备份旧版数据
+
+//停止并删除旧容器
+docker stop halo
+docker rm halo
+
+//创建新版数据目录
+mkdir -p /root/.halo2  # 新版数据目录
+
+//运行 Halo 2.x 容器
+docker run -d \
+  --name halo \
+  -p 8080:8090 \
+  -v /root/.halo2:/root/.halo2 \  # 挂载新版目录
+  halohub/halo:latest
+  或者
+  docker run -d --name halo -p 8080:8090 -v /root/.halo2:/root/.halo2 --restart=unless-stopped halohub/halo:latest
+
+//列出所有 Docker 容器并筛选出名称中包含 "halo"的容器
+  docker ps -a | grep halo
+
+  //然后访问
+  docker ps -a | grep halo
