@@ -70,4 +70,4 @@ docker run -d \
   docker ps -a | grep halo
 
   //然后访问
-  docker ps -a | grep halo
+http://IP:8080/console
