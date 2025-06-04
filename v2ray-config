@@ -16,11 +16,11 @@ sudo vim /usr/local/etc/v2ray/config.json 或 /etc/v2ray/config.json
 
 {
   "inbounds": [{
-    "port": 32461,
+    "port": 32462,
     "protocol": "vmess",
     "settings": {
       "clients": [{
-        "id": "0e41216a-e6a6-4475-9c03-dd63a06ea8d7",
+        "id": "b6f09b20-fe31-446a-bafa-27922aedcd59",
         "alterId": 64
       }]
     },
@@ -50,6 +50,13 @@ systemctl status v2ray   # 检查状态
 
 
 #开放端口
+#如果端口没有开放遇到这样的提示    ---sudo systemctl start firewalld
+#需要先启动
+sudo systemctl start firewalld
+
+#确认已经启动
+sudo systemctl status firewalld
+
 sudo firewall-cmd --zone=public --add-port=32461/tcp --permanent
 sudo firewall-cmd --zone=public --add-port=32461/udp --permanent
 sudo firewall-cmd --reload

@@ -1,0 +1,118 @@
+
+#因为先拉取运行了halo，可以使用 Docker Compose，定义和运行多容器 Docker 应用
+#安装，
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+#创建 docker-compose.yml 文件：
+version: '3.8'  # 使用较新的 Compose 版本
+
+services:
+  halo:
+    image: halohub/halo:latest
+    container_name: halo
+    restart: unless-stopped
+    ports:
+      - "8080:8090"  # 主机端口:容器端口
+    volumes:
+      - /root/.halo2:/root/.halo2  # 持久化数据
+    networks:
+      - app_network  # 自定义网络（可选）
+
+  maxkb:
+    image: maxkb/maxkb:latest
+    container_name: maxkb
+    restart: unless-stopped
+    ports:
+      - "8081:8080"  # MaxKB 默认端口
+    volumes:
+      - /root/maxkb/data:/var/lib/postgresql/data  # 持久化数据
+    networks:
+      - app_network
+
+networks:
+  app_network:  # 定义共享网络（可选）
+    driver: bridge
+
+
+#启动服务
+docker-compose up -d
+
+
+#验证服务状态
+docker-compose ps
+
+
+
+#或者是单个运行容器
+
+#在docker中拉取MaxKB镜像
+
+docker search maxkb
+
+
+#拉取maxkb镜像
+
+docker pull 1panel/maxkb
+
+
+#拉取镜像完毕后，运行一个容器实例，例如第一个8080可以修改成其他端口8082/8082这样
+#-p 8082:8082：将容器的 8082 端口映射到宿主机的 8082 端口
+#主机端口:容器端口
+#左侧（主机端口）：服务器（宿主机）对外开放的端口，用户通过这个端口访问服务。
+ 右侧（容器端口）：Docker 容器内部服务实际运行的端口，由镜像决定。
+#-v ~/.maxkb:/var/lib/postgresql/data 会将宿主机目录挂载到容器中的 PostgreSQL 数据目录。
+#如果旧容器曾使用过此目录，新容器可能因数据不兼容启动失败。
+
+#备份目录
+mv ~/.maxkb ~/.maxkb.bak && mkdir ~/.maxkb
+#使用新目录
+-v ~/.maxkb_new:/var/lib/postgresql/data
+
+docker run -d --name=maxkb -p 8082:8082 -v ~/.maxkb:/var/lib/postgresql/data 1panel/maxkb
+
+
+#查看当前运行的 Docker 容器
+
+docker ps
+
+
+#查看本地镜像列表
+docker images
+
+
+#访问MaxKB
+
+#由于服务器内存不足，尝试在虚拟机实现，docker镜像无法拉取镜像，于是在github上找到了可以拉取的命令
+#以下是根据github上的方法实现安装docker以及拉取镜像还有使用ngrok或者cpolar(内网穿透工具)实现内网穿透，实现互联网的访问
+
+#使用Gitee的链接
+sudo curl -fsSL https://gitee.com/tech-shrimp/docker_installer/releases/download/latest/linux.sh| bash -s docker --mirror Aliyun
+
+#启动docker
+
+sudo service docker start
+
+#Linux配置镜像站
+
+sudo vi /etc/docker/daemon.json
+
+#输入下列内容，最后按ESC，输入 :wq! 保存退出。
+
+#查看内容
+sudo cat /etc/docker/daemon.json
+
+{
+    "registry-mirrors": [
+        "https://docker.m.daocloud.io",
+        "https://docker.1panel.live",
+        "https://hub.rat.dev"
+    ]
+}
+
+#重启docker
+
+sudo service docker restart
+
+#去哪里找镜像
+https://hub.docker.com/search?q=&type=image
