@@ -13,7 +13,7 @@
 
 关于数据库的增（insert  into）操作，可能会使用到的关键字
 
-DEFAULT：插入默认值。
+default：插入默认值。
 
 NULL：插入空值。
 
@@ -33,3 +33,19 @@ WHERE：用于在插入时筛选符合条件的数据（INSERT INTO ... SELECT�
 EXISTS 和 NOT EXISTS：确保在插入数据之前满足某些条件。
 
 DISTINCT：确保插入唯一数据。
+
+
+如果不知道表的值可以通过一下语句查看表结构
+
+SELECT COLUMN_NAME, COLUMN_DEFAULT
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = '表名';
+
+然后在查询表结构的时候碰到一个这样的属性NEWSEQUENTIALID()，是用于生成全局唯一标识符（GUID），NEWSEQUENTIALID() 会生成按照时间顺序递增的 GUID
+还有((0))：表示数字类型字段的默认值为 0，通常用于整型字段。它可能表示一个标志位、计数值，或者默认的数值。
+
+('')：表示字符类型字段的默认值为 空字符串，通常用于 VARCHAR 或 TEXT 类型字段。它表示该字段为空，但不是 NULL。
+
+'' 表示一个不包含任何字符的字符串，它与 NULL 不同，NULL 代表没有值，而 '' 表示一个有效的字符串，只是内容为空。
+
+在对某个字段进行查找的时候 is not 只适用于null，然后当判断是不是空值或者其他值时，使用的是<>(类似于逻辑符号！，反正都是不等于的意思)
