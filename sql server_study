@@ -10,6 +10,9 @@
 数据库：数据库是一个存储、组织和管理数据的系统，它是通过各种结构（如表、视图、索引等）来存储和管理数据的集合。数据库允许用户通过查询和操作数据来进行各种数据处理和管理
 数据库（Database）：是一个用于存储、管理和操作数据的系统。它包含多个表，每个表由多个字段和记录组成。数据库提供数据的存储、查询、更新等功能，并确保数据的完整性和安全性
 
+字段是列（垂直方向）
+记录是行（水平方向），由多个字段值组成
+
 
 关于数据库的增（insert  into）操作，可能会使用到的关键字
 
@@ -58,3 +61,89 @@ WHERE TABLE_NAME = '表名';
 
 在使用SET IDENTITY_INSERT关键字进行显式插入自增列的时候，关闭之后再去插入，自增的列（比如 IDENTITY(1,1)的数据类型）是根据显式插入自增列的值之后自增
 
+with关键字 （理解是创建临时表）SQL中用于创建临时结果集的高级功能
+语法是这样的
+WITH cte_name [(column_name [,...])] AS (
+    subquery
+)
+main_query;
+with MaxVersion as (select max(Version) as MaxVer from TSysData4User)select t.*from TSysData4User t join MaxVersion m on t.Version=m.MaxVer
+比如这个就是一个临时命名的结果集（CTE，即公用表表达式） MaxVersion，它只有一列 MaxVer，存储的就是 MAX(Version) 的计算结果。然后通过 JOIN 关联原表，筛选出 Version 等于这个最大值的记录。
+
+在进行 ORDER BY 列名 DESC 的一个降级排序的时候，数据类型为varchar(20)的时候，数字字符（'0'-'9'）的 ASCII 值比大写字母（'A'-'Z'）和小写字母（'a'-'z'）小
+
+然后在进行升序降序的时候（order by 列名 asc / desc）想要添加where条件的时候where条件必须放在order by的前面
+
+当我的查询条件不想区分大小写的时候可以使用 lower()/upper() 函数，或者使用 like 操作符 ，类似于通配符一样
+
+当查询日期的时候，像这样UpdateTime BETWEEN '2022' AND '2023'，只能筛选到2022年的，原因是
+然后起始值不能大于结束值
+SQL Server实际上将其解释为：WHERE UpdateTime >= '2022-01-01 00:00:00.000' AND UpdateTime <= '2023-01-01 00:00:00.000'
+
+sql server里面没有limit关键字
+此时想要分页查询使用的是 （offset，rows fetch next ...rows only)
+select  * from  TSysData4User where CreateTime between '2023' and '2024' order by CreateTime offset 20 rows fetch next 10 rows only
+
+sql server 取余数使用的是%，其他的是使用的mod（）
+
+GROUP BY (group by)是对是对 具有相同值的行进行分组，将相同列值的行分到同一个组，然后可以对每个组进行聚合计算（如 COUNT()、SUM()、AVG() 等）
+group by自动将数据分组并去除重复的记录（行），因此不需要使用distinct来去重
+
+还有要注意的点是
+在进行数组或对象的比较时，特别是在 版本号 或 逐位比较 时，比较过程是从左到右依次进行的，并且一旦找到 某一位的不同 或 某一位已确定的最大值，就可以 停止比较后续的位。这是一种 "短路" 机制。
+
+窗口函数ROW_NUMBER()(row_number)和DENSE_RANK()（dense_rank）的区别在于
+
+ROW_NUMBER()
+为每一行分配唯一的序号，即使值相同
+不会出现相同的序号
+序号总是连续的1,2,3,...
+
+DENSE_RANK()
+相同的值会得到相同的排名
+排名是连续的(1,2,2,3,...)
+
+注意的是
+PARTITION BY：将数据分成多个分区或组，在每个分区中为每一行分配一个唯一的行号。每个分区内的行号从 1 开始。
+ORDER BY：在每个分区内，根据指定的列排序，为每一行分配一个递增的数字。
+
+例如
+DENSE_RANK() OVER (ORDER BY Salary DESC) AS SalaryRank这个句子
+DENSE_RANK(): 这是排名函数
+OVER: 表示这是一个窗口函数
+ORDER BY Salary DESC: 指定按Salary降序排列
+AS SalaryRank: 给这个排名列起个别名
+
+与普通RANK()的区别
+假设有以下薪资数据：10000, 9000, 9000, 8000
+RANK() 会给出: 1, 2, 2, 4 (有跳跃)
+DENSE_RANK() 会给出: 1, 2, 2, 3 (无跳跃)
+
+
+有一个疑问的点是 distinct和having都涉及去重，但是他们的作用和使用场景是不同的
+distinct：是用于去除查询结果中重复的行，作用于整个查询结果集而不是单独的列
+having：用于筛选分组结果，作用于group by后的结果，而不是单独的行。一般与聚合函数（count，sum，avg等）一起使用，在where子句之后使用
+
+IN vs =：
+IN 适用于子查询可能返回多个值的情况。
+= 适用于子查询只返回单个值的情况（否则会报错）。
+
+注意：当开启事务（begin transaction）的时候执行 rollbak或者commit的时候 ，当前事务已经被终止了，如果还想继续在事务里面执行的话得再一次开启事务
+然后 sql server 还可以使用 begin tran开启事务
+
+关于窗口函数，有一个例子是查询一个至少连续出现三次以上的数字的查询语句
+SELECT Id,Num,
+ROW_NUMBER() over(partition by Num order by Id) as SerialGroup
+FROM ContinueNumber
+
+关于这个窗口函数有一个 关键字  partition于将结果集划分为多个分区，窗口函数会在每个分区内独立计算。
+分析是
+ROW_NUMBER()窗口函数：为每一行分配一个唯一的序号
+PARTITION BY Num：按Num值分组，相同的Num值会被分到同一组
+ORDER BY Id：在每个Num分组内，按照Id排序
+
+
+左右连接的条件，比如
+b.id = a.managerId：表示表 b 中的 id 是表 a 中某个员工的经理 id。
+
+a.id = b.managerId：表示表 a 中的 id 是表 b 中某个员工的经理 id。
